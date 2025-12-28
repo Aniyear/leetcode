@@ -5,40 +5,50 @@ import (
 	"strings"
 )
 
-type log struct {
-	num    int
-	action string
-	pos    int
+type Stack struct {
+	record []int
 }
 
 func exclusiveTime(n int, logs []string) []int {
-	records := Record(logs)
 	res := make([]int, n)
-	prev := 0
-	stack := []log{records[0]}
-	for i := 1; i < len(records); i++ {
-		if records[i].action == "start" {
-			if len(stack) != 0 {
-				res[stack[len(stack)-1].num] += records[i].pos - prev
+	s := &Stack{}
+
+	prevPos := 0
+	for _, log := range logs {
+		record := strings.Split(log, ":")
+		currID, _ := strconv.Atoi(record[0])
+		currPos, _ := strconv.Atoi(record[2])
+		if record[1] == "start" {
+			if prevID, ok := s.Peek(); ok {
+				res[prevID] += currPos - prevPos - 1
 			}
-			stack = append(stack, records[i])
-			prev = records[i].pos
+			s.Push(currID)
 		} else {
-			res[stack[len(stack)-1].num] += records[i].pos - prev + 1
-			stack = stack[:len(stack)-1]
-			prev = records[i].pos + 1
+			runID, _ := s.Pop()
+			res[runID] += currPos - prevPos + 1
 		}
+		prevPos = currPos
 	}
 	return res
 }
 
-func Record(logs []string) []log {
-	var records []log
-	for _, l := range logs {
-		s := strings.Split(l, ":")
-		def, _ := strconv.Atoi(s[0])
-		pos, _ := strconv.Atoi(s[2])
-		records = append(records, log{def, s[1], pos})
+func (s *Stack) Push(x int) {
+	s.record = append(s.record, x)
+}
+
+func (s *Stack) Pop() (int, bool) {
+	if len(s.record) == 0 {
+		return -1, false
 	}
-	return records
+	peek := s.record[len(s.record)-1]
+	s.record = s.record[:len(s.record)-1]
+	return peek, true
+}
+
+func (s *Stack) Peek() (int, bool) {
+	if len(s.record) == 0 {
+		return -1, false
+	}
+	peek := s.record[len(s.record)-1]
+	return peek, true
 }
